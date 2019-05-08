@@ -21,11 +21,11 @@ class sendData(Structure):
 
 recsock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
-sock.bind((UDP_IP, recPort))
+recsock.bind((UDP_IP, recPort))
 
 sendsock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
-sock.bind((UDP_IP, sendPort))
+sendsock.bind((UDP_IP, sendPort))
 
 print "Robot Controls"
 print "UP : increase speed"
@@ -96,7 +96,7 @@ while True:
 	if theta > 360: theta = 360
 	if theta < 0: theta = 0
 
-	if (send = True):
+	if (send == True):
 		vel = Velocity(v,theta)
 		print "Sending input " + send_in
 		sendsock.sendto(vel, (UDP_IP, sendPort))
