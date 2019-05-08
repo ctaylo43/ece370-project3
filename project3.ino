@@ -26,7 +26,7 @@ using namespace BLA;
 // Motor Variables //
 int pwm_motR = 0;
 int pwm_motL = 0;
-
+bool reverse = false;
 
 // Access Point Variables // 
 char ssid[] = SECRET_SSID;    // your network SSID (name)
@@ -203,6 +203,7 @@ void initStructs(){
   global_matrix(0,1) = -sin(init_rad);
   global_matrix(1,0) = sin(init_rad);
   global_matrix(1,1) = cos(init_rad);
+  Serial.println("... Structs initialized");
 }
 
 // Loop Functions //
@@ -211,7 +212,7 @@ void checkIMU(){
   compass.read();
   float az = (float)compass.a.z * 0.061;
   float g = az/1000.0;
-  Serial.println(g);
+  //Serial.println(g);
   if (g > 1.10){
     Serial.println("Picked up!");
     pickup = true;
@@ -238,8 +239,14 @@ void checkUDP(){
 }
 
 void SetSpeed(){
-  pwm_motL = a.v;
-  pwm_motR = a.v;
+  if (a.v < 0){
+    reverse = true;
+  }
+  else {
+    reverse = false;
+  }
+  pwm_motL = abs(a.v);
+  pwm_motR = abs(a.v);
 }
 
 int setDir(){
@@ -266,11 +273,20 @@ void updateMotors(){
     pwm_motL = 0;
     pwm_motR = 0;
   }
+
+  if (reverse){
+    analogWrite(MOT_L_A, 0);
+    analogWrite(MOT_L_B, pwm_motL);
+    analogWrite(MOT_R_A, 0);
+    analogWrite(MOT_R_B, pwm_motR);
+  }
+  else {
+    analogWrite(MOT_L_A, pwm_motL);
+    analogWrite(MOT_L_B, 0);
+    analogWrite(MOT_R_A, pwm_motR);
+    analogWrite(MOT_R_B, 0);
+  }
   
-  analogWrite(MOT_L_A, pwm_motL);
-  analogWrite(MOT_L_B, 0);
-  analogWrite(MOT_R_A, pwm_motR);
-  analogWrite(MOT_R_B, 0);
 }
 
 void ISR_L(){
