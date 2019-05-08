@@ -6,8 +6,8 @@ from ctypes import *
 from getkey import getkey, keys
 
 UDP_IP = "127.0.0.1"
-recPort = 5005;
-sendPort = 4242;
+recPort = 4242
+sendPort = 5005
 
 v = 0
 theta = 0
@@ -25,7 +25,6 @@ recsock.bind((UDP_IP, recPort))
 
 sendsock = socket.socket(socket.AF_INET, # Internet
                      socket.SOCK_DGRAM) # UDP
-sendsock.bind((UDP_IP, sendPort))
 
 print ""
 print "###############################"
