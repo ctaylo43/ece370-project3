@@ -1,3 +1,5 @@
+#include <BasicLinearAlgebra.h>
+using namespace BLA;
 #include <WiFi101.h>
 #include <WiFiUdp.h>
 #include <math.h>
@@ -30,13 +32,14 @@ int pwm_motL = 0;
 char ssid[] = SECRET_SSID;    // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;
-int status = WL_IDLE_STATUS
+int status = WL_IDLE_STATUS;
 
 // UDP Variables //
 unsigned int recPort = 5005;
-unsigned int sendPort = 8004;
+unsigned int sendPort = 4242;
 WiFiUDP recUdp;
 WiFiUDP sendUdp;
+char UdpBuffer[1024];
 
 // UDP Structs //
 struct Velocity { // struct to send speed and angle of the robot
@@ -45,7 +48,7 @@ struct Velocity { // struct to send speed and angle of the robot
 };
 
 struct sendData {
-  double odom[3];
+  double odo[3];
   double imu[6];
   double heading;
 };
@@ -67,12 +70,12 @@ bool pickup = false;
 #define DELTA_THETA_R ((2*PI/TICKS)/GEAR_RATIO)   // wheel rotation per tick in rads
 #define DIS_TICK (W_RADIUS*DELTA_THETA_R)    // distance wheel rotates per tick
 #define PHI atan2(DIS_TICK, L)   // change in angle of the robot per tick in rads
-float delta_x = 0, delta_y = 0
+float delta_x = 0, delta_y = 0;
 
 // Matrices //
 Matrix<4,4> right_wheel = {
-   cos(phi),  -sin(phi),  0,  0,
-   sin(phi),  cos(phi), 0,  L / 2,
+   cos(PHI),  -sin(PHI),  0,  0,
+   sin(PHI),  cos(PHI), 0,  L / 2,
    0, 0,  1,  0,
    0, 0,  0,  1};
 
@@ -83,8 +86,8 @@ Matrix<4,4> right_translate = {
   0,  0,  0,  1};
 
 Matrix<4,4> left_wheel = {
-   cos(-phi),  -sin(-phi),  0,  0,
-   sin(-phi),  cos(-phi), 0,  -L / 2,
+   cos(-PHI),  -sin(-PHI),  0,  0,
+   sin(-PHI),  cos(-PHI), 0,  -L / 2,
    0, 0,  1,  0,
    0, 0,  0,  1};
 
@@ -172,7 +175,7 @@ void pinSetup(){
   pinMode(IRPIN_L, INPUT);
   pinMode(IRPIN_R, INPUT);
   attachInterrupt(digitalPinToInterrupt(IRPIN_L), ISR_L, RISING);
-  attachInterrupt((digitalPinToInterrupt(IRPIN_R), ISR_R, RISING);
+  attachInterrupt(digitalPinToInterrupt(IRPIN_R), ISR_R, RISING);
   Serial.println("...Pin initialization complete");
 }
 
@@ -191,11 +194,11 @@ void initStructs(){
   a.v = 0;
   a.theta = 0;
   compass.read();
-  init_theta = compass.heading();
+  int init_theta = compass.heading();
   Serial.print("Initial Angle: ");
   Serial.println(init_theta);
   cur_angle = init_theta;
-  init_rad = init_theta*(PI/180);
+  int init_rad = init_theta*(PI/180);
   global_matrix(0,0) = cos(init_rad);
   global_matrix(0,1) = -sin(init_rad);
   global_matrix(1,0) = sin(init_rad);
@@ -217,7 +220,21 @@ void checkIMU(){
 }
 
 void checkUDP(){
-  
+  int rec_packetSize = recUdp.parsePacket();
+  if (rec_packetSize > 0){
+    int rec_len = recUdp.read(UdpBuffer, 1024);
+    if (rec_len > 0){
+      memcpy(&a, UdpBuffer, sizeof(&a));
+    }
+  }
+
+  int send_packetSize = sendUdp.parsePacket();
+  if (send_packetSize > 0){
+    int send_len = sendUdp.read(UdpBuffer, 1024);
+    if (send_len > 0){
+      memcpy(&data, UdpBuffer, sizeof(&data));
+    }
+  }
 }
 
 void SetSpeed(){
@@ -226,7 +243,7 @@ void SetSpeed(){
 }
 
 int setDir(){
-  des_angle = a.theta;
+  int des_angle = a.theta;
   if (des_angle < 0){
     des_angle += 360;
   }
@@ -257,7 +274,7 @@ void updateMotors(){
 }
 
 void ISR_L(){
-  global_matrix *= left_transform
+  global_matrix *= left_transform;
 }
 
 void ISR_R(){
