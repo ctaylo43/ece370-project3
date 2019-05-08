@@ -100,7 +100,7 @@ while True:
 	if v > 250: v = 250
 	if v < -250: v = -250
 	if theta > 360: theta = 360
-	if theta < 0: theta = 0
+	if theta < -360: theta = -360
 
 	if (send == True):
 		vel = Velocity(c_int(v),c_int(theta))
