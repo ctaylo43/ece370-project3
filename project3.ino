@@ -114,6 +114,8 @@ void setup() {
 void loop() {
   checkIMU();
   checkUDP();
+  SetSpeed();
+  setDir();
   updateMotors();
 }
 
@@ -218,14 +220,34 @@ void checkUDP(){
   
 }
 
+void SetSpeed(){
+  pwm_motL = a.v;
+  pwm_motR = a.v;
+}
+
+int setDir(){
+  des_angle = a.theta;
+  if (des_angle < 0){
+    des_angle += 360;
+  }
+  if (cur_angle != des_angle){
+    int error = cur_angle - des_angle;
+    while(error < ((float)des_angle - 5)) {
+      analogWrite(MOT_L_A, 0);
+      analogWrite(MOT_L_B, 255);
+      analogWrite(MOT_R_A, pwm_motR);
+      analogWrite(MOT_R_B, 0);
+      compass.read();
+      cur_angle = compass.heading();
+      error = cur_angle - des_angle;
+    }
+  }
+}
+
 void updateMotors(){
   if (pickup){
     pwm_motL = 0;
     pwm_motR = 0;
-  }
-  else {
-    pwm_motL = 100;
-    pwm_motR = 100;
   }
   
   analogWrite(MOT_L_A, pwm_motL);
@@ -235,11 +257,11 @@ void updateMotors(){
 }
 
 void ISR_L(){
-  
+  global_matrix *= left_transform
 }
 
 void ISR_R(){
-  
+  global_matrix *= right_transform;
 }
 
 void rotate(float des_angle){
