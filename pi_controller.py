@@ -103,7 +103,7 @@ while True:
 
 	if (send == True):
 		vel = Velocity(c_int(v),c_int(theta))
-		print " "
+		print ""
                 print "v = " + str(v)
                 print "theta = " + str(theta)
                 print "Sending input " + send_in
