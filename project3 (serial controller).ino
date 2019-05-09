@@ -28,6 +28,7 @@ int pwm_motR = 0;
 int pwm_motL = 0;
 bool reverse = false;
 bool rotation_complete = false;
+int l_theta;
 
 // Access Point Variables // 
 char ssid[] = SECRET_SSID;    // your network SSID (name)
@@ -122,8 +123,10 @@ void loop() {
     readInput();
   }
   SetSpeed();
-  if (rotation_complete == false) setDir();
+  if (l_theta != a.theta) rotate(a.theta);
+  //if (rotation_complete == false) setDir();
   updateMotors();
+  int l_theta = a.theta;
 }
 
 // Setup Functions //
@@ -215,9 +218,9 @@ void initStructs(){
 void checkIMU(){
   compass.read();
   float az = (float)compass.a.z * 0.061;
-  float g = az/1000.0;
+  float g = -az/1000.0;
   //Serial.println(g);
-  if (g > 1.10){
+  if (g > 1.2){
     Serial.println("Picked up!");
     pickup = true;
   }
@@ -251,11 +254,6 @@ void SetSpeed(){
   }
   pwm_motL = abs(a.v);
   pwm_motR = abs(a.v);
-
-  if (pickup){
-    a.v = 0;
-    a.v = 0;
-  }
 }
 
 int setDir(){
@@ -292,7 +290,12 @@ void updateMotors(){
     analogWrite(MOT_R_A, pwm_motR);
     analogWrite(MOT_R_B, 0);
   }
-  
+  if (pickup){
+    analogWrite(MOT_L_A, 0);
+    analogWrite(MOT_L_B, 0);
+    analogWrite(MOT_R_A, 0);
+    analogWrite(MOT_R_B, 0);
+  }
 }
 
 void ISR_L(){
@@ -360,6 +363,10 @@ void readInput(){
     // send_in = "d"
   }
 
+  else if (input == 'z'){
+    pickup = false;
+  }
+
 //  else if (input == 'q'):
 //    print "Exiting program"
 //    sys.exit()
@@ -378,7 +385,7 @@ void readInput(){
 }
 
 void rotate(float des_angle){
-  int error = cur_angle - des_angle;
+  int error = des_angle - cur_angle;
   Serial.print("Initial error: ");
   Serial.println(error);
   while(abs(error) > angle_tolerance){
@@ -397,7 +404,7 @@ void rotate(float des_angle){
 //    }
     compass.read();
     cur_angle = compass.heading();
-    error = cur_angle - des_angle;
+    error = des_angle - cur_angle;
     Serial.print("Current Angle: ");
     Serial.println(cur_angle);
     Serial.print("Current Error: ");
